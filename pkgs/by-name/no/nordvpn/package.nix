@@ -4,6 +4,7 @@
   copyDesktopItems,
   e2fsprogs,
   fetchFromGitHub,
+  flutter,
   iproute2,
   iptables,
   lib,
@@ -48,6 +49,14 @@ buildGoModule (finalAttrs: {
     repo = "nordvpn-linux";
     tag = finalAttrs.version;
     hash = "sha256-o9+9IiXV2CS/Zj3bDg8EJn/UidwA6Fwn4ySFbwyCp60=";
+  };
+
+  guiApp = flutter.buildFlutterApplication {
+    pname = "nordvpn-gui";
+    version = finalAttrs.version;
+    src = finalAttrs.src;
+    pubspecLock = lib.importJSON ./pubspec.lock.json;
+    sourceRoot = "${finalAttrs.src.name}/gui";
   };
 
   nativeBuildInputs = [
@@ -104,6 +113,7 @@ buildGoModule (finalAttrs: {
     rm $BIN_DIR/{cli,daemon,norduser}
 
     # Copy GUI binary from guiApp
+    cp -r ${finalAttrs.guiApp}/bin/* $BIN_DIR/
 
     # nordvpn needs icons for the system tray and notifications
     ASSETS_PATH=$out/share/icons/hicolor/scalable/apps
@@ -138,6 +148,16 @@ buildGoModule (finalAttrs: {
       mimeTypes = [ "x-scheme-handler/nordvpn" ];
       name = "nordvpn";
       terminal = true;
+      type = "Application";
+    })
+    (makeDesktopItem {
+      categories = [ "Network" ];
+      comment = "NordVPN graphical user interface.";
+      desktopName = "NordVPN GUI";
+      exec = "nordvpn-gui";
+      icon = "nordvpn";
+      name = "nordvpn-gui";
+      terminal = false;
       type = "Application";
     })
   ];
